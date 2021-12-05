@@ -2,7 +2,12 @@ import pyprep
 import mne
 import numpy as np 
 import scipy as sp 
+import scipy.io as spio
 import glob, os
+
+# ==============================================================================
+# HELPER FUNCTION TO READ MAT STRUCTS
+# ==============================================================================
 
 def _loadmat(filename):
     '''
@@ -58,6 +63,10 @@ def _loadmat(filename):
         return elem_list
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
+
+# ==============================================================================
+# CLASS TO HANDLE EPOCHING AND THE PREPROCESSING PIPELINE
+# ==============================================================================
 
 class Epoch():
     '''
@@ -133,6 +142,7 @@ class Epoch():
         self.prep = None
         self.epoch = None
         self.mask = None
+        self.numpy_array = None
 
     def _find_mask(self):
         '''
@@ -189,13 +199,13 @@ class Epoch():
             try:
                 prep.fit()
                 self.prep = prep
-                self.prep.EEG_clean = \
-                                  self.prep.EEG_clean[self.mask[0]:self.mask[1]]
+                self.numpy_array = \
+                            self.prep.EEG_clean[:, self.mask[0]:self.mask[1]]
             except(ValueError):
                 self.bad = 'robust_whole'
                 raise ValueError('Data is too bad to perform PREP')
         self.prep = prep
-        self.prep.EEG_clean = self.prep.EEG_clean[self.mask[0] : self.mask[1]]
+        self.prep.numpy_array = self.prep.EEG_clean[:, self.mask[0]:self.mask[1]]
 
     def fit(self, 
             ch_types='eeg',
@@ -244,6 +254,7 @@ class Epoch():
                                        ransac=True)
             prep.fit()
             self.prep = prep
+            self.numpy_array = self.prep.EEG_clean
         except(OSError, ValueError):
             self.bad = 'ransac_event'
             prep = pyprep.PrepPipeline(mne_eeg, prep_params, montage, 
@@ -252,6 +263,7 @@ class Epoch():
             try:
                 prep.fit()
                 self.prep = prep
+                self.numpy_array = self.prep.EEG_clean
             except(ValueError):
                 self.bad = 'robust_event'
 
@@ -296,11 +308,21 @@ class Epoch():
         Return: none.
         '''
         if self.bad != 'robust_whole':
-            np_cleaned = self.prep.EEG_clean
             if filename == None:
                 parent_dir = os.path.abspath(os.path.join(self.mat_dir, os.pardir))
                 filename = parent_dir + os.sep + 'numpy' + os.sep + self.name + '.npy'
             with open(filename, 'wb') as f:
-                np.save(f, np_cleaned)
+                np.save(f, self.numpy_array)
         else:
             print('Data too bad to use PREP, therefore no output numpy file.')
+
+# ==============================================================================
+# SCRIPT TO PREPROCESS ALL FILES AT ONCE
+# NOTE: Assuming this script is stored in the same folder as that of all .mat
+# files.
+# ==============================================================================
+if __name__ == '__main__':
+    dirs = glob.glob('.' + os.sep + '*.mat')
+    for d in dirs:
+        epoch = Epoch(d)
+        epoch.save_numpy()
