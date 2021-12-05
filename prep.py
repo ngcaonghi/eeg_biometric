@@ -267,7 +267,7 @@ class Epoch():
             except(ValueError):
                 self.bad = 'robust_event'
 
-        if self.bad != 'robust_event':
+        if self.bad == 'robust_event':
             self._fit_whole(info, montage, prep_params, filter_kwargs)
     
     def report(self):
