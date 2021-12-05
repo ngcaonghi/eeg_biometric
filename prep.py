@@ -266,9 +266,8 @@ class Epoch():
                 self.numpy_array = self.prep.EEG_clean
             except(ValueError):
                 self.bad = 'robust_event'
-
-        if self.bad == 'robust_event':
-            self._fit_whole(info, montage, prep_params, filter_kwargs)
+                self._fit_whole(info, montage, prep_params, filter_kwargs)
+                
     
     def report(self):
         '''
