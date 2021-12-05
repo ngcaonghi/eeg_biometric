@@ -203,7 +203,7 @@ class Epoch():
                             self.prep.EEG_clean[:, self.mask[0]:self.mask[1]]
             except(ValueError):
                 self.bad = 'robust_whole'
-                raise ValueError('Data is too bad to perform PREP')
+                print('Data is too bad to perform PREP')
         self.prep = prep
         self.prep.numpy_array = self.prep.EEG_clean[:, self.mask[0]:self.mask[1]]
 
@@ -310,7 +310,10 @@ class Epoch():
         if self.bad != 'robust_whole':
             if filename == None:
                 parent_dir = os.path.abspath(os.path.join(self.mat_dir, os.pardir))
-                filename = parent_dir + os.sep + 'numpy' + os.sep + self.name + '.npy'
+                numpy_folder = parent_dir + os.sep + 'numpy'
+                if not os.path.exists(numpy_folder):
+                    os.makedirs(numpy_folder)
+                filename = numpy_folder + os.sep + self.name + '.npy'
             with open(filename, 'wb') as f:
                 np.save(f, self.numpy_array)
         else:
@@ -325,4 +328,5 @@ if __name__ == '__main__':
     dirs = glob.glob('.' + os.sep + '*.mat')
     for d in dirs:
         epoch = Epoch(d)
+        epoch.fit()
         epoch.save_numpy()
