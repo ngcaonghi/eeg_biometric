@@ -126,7 +126,8 @@ class TripletLossDataLoader(DataLoader):
     All methods are inherited from torch.utils.data.DataLoader except for
     __init__ which is overwritten.
     '''
-    def __init__(self, dataset, snn, batch_size, hard_ratio, **kwargs):
+    def __init__(self, dataset, snn, batch_size, hard_ratio, device='cuda', 
+                **kwargs):
         '''
         Overwites torch.utils.data.DataLoader's __init__method.
 
@@ -140,9 +141,10 @@ class TripletLossDataLoader(DataLoader):
             (n * hard_ratio) triplets that produce the highest losses; the 
             second round fills the rest of the batch with randomly sampled 
             triplets.
+            - device (str): either 'cuda' or 'cpu'.
         '''
         sampler = _HardSampler(
-            dataset, snn, batch_size, hard_ratio
+            dataset, snn, batch_size, hard_ratio, device
         )
         batch_sampler = BatchSampler(
             sampler=sampler, batch_size=batch_size, drop_last=True
