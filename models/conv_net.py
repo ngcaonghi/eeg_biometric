@@ -28,7 +28,7 @@ class Conv2dNet(nn.Module):
             Otherwise, the object size must be equal to depth, and the kernel 
             sizes will be assigned in the order of the layers. 
         '''
-        super(SiameseNetwork, self).__init__()
+        super(Conv2dNet, self).__init__()
         self.depth = depth
 
         # check if depth value is valid
@@ -69,7 +69,4 @@ class Conv2dNet(nn.Module):
         '''
         x = self.cnn(s)
         x = x.view(x.size()[0], -1)
-        return x
-
-class Conv1dNet(nn.Module):
-    
+        return x  
